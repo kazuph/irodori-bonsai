@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+build/
+gradio_outputs/
+*.wav
+*.mp3
+.DS_Store
