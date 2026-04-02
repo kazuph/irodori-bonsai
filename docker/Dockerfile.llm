@@ -1,0 +1,46 @@
+FROM nvidia/cuda:12.8.0-devel-ubuntu22.04 AS build
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake build-essential git curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Build PrismML fork of llama.cpp with CUDA (1-bit Q1_0_g128 kernel support)
+RUN git clone --branch prism --depth 1 https://github.com/PrismML-Eng/llama.cpp /tmp/llama.cpp \
+    && cd /tmp/llama.cpp \
+    && ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 \
+    && cmake -B build -DGGML_CUDA=ON \
+    && LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH \
+       cmake --build build -j$(nproc) \
+    && rm /usr/local/cuda/lib64/stubs/libcuda.so.1
+
+# Runtime stage
+FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl python3 python3-pip libgomp1 \
+    && pip install --no-cache-dir huggingface-hub \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /tmp/llama.cpp/build/bin/llama-server /usr/local/bin/llama-server
+COPY --from=build /tmp/llama.cpp/build/bin/lib*.so* /usr/local/lib/
+
+RUN ldconfig
+
+# Download model script
+RUN echo '#!/bin/bash\n\
+MODEL_PATH="/models/Bonsai-8B.gguf"\n\
+if [ ! -f "$MODEL_PATH" ]; then\n\
+    echo "[llm] Downloading Bonsai-8B 1-bit GGUF..."\n\
+    python3 -c "\n\
+from huggingface_hub import hf_hub_download\n\
+hf_hub_download(repo_id=\"prism-ml/Bonsai-8B-gguf\", filename=\"Bonsai-8B.gguf\", local_dir=\"/models\")\n\
+"\n\
+    echo "[llm] Download complete!"\n\
+fi\n\
+exec llama-server "$@"\n' > /entrypoint.sh && chmod +x /entrypoint.sh
+
+EXPOSE 8080
+
+ENTRYPOINT ["/entrypoint.sh", "--host", "0.0.0.0", "--port", "8080"]
