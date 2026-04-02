@@ -1,0 +1,7 @@
+.venv
+.git
+.worktree
+__pycache__
+*.pyc
+.artifacts
+docker

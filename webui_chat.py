@@ -19,33 +19,59 @@ import torch
 _llm_model = None
 _llm_tokenizer = None
 _llm_history: list[dict] = []
+_llm_backend: str = ""  # "mlx" or "llama_cpp"
 
 SYSTEM_PROMPT = "あなたは「みどり」という名前の親切で明るいAIアシスタントです。日本語で短く自然に会話してください。長くても3文以内で答えてください。絵文字は使わないでください。"
 
 DEFAULT_CAPTION = "落ち着いた女性の声で、近い距離感でやわらかく自然に読み上げてください。"
 
-
 def load_llm():
-    global _llm_model, _llm_tokenizer, _llm_history
+    global _llm_model, _llm_tokenizer, _llm_history, _llm_backend
     if _llm_model is not None:
         return
-    from mlx_lm import load
-    print("[llm] Loading Bonsai-8B 1-bit...")
-    _llm_model, _llm_tokenizer = load("prism-ml/Bonsai-8B-mlx-1bit")
+
+    llm_api_base = os.environ.get("LLM_API_BASE")
+    if llm_api_base:
+        from openai import OpenAI
+
+        print(f"[llm] Using llama.cpp server at {llm_api_base}...")
+        _llm_model = OpenAI(base_url=f"{llm_api_base}/v1", api_key="no-key")
+        _llm_tokenizer = None
+        _llm_backend = "llama_server"
+    else:
+        from mlx_lm import load
+
+        print("[llm] Loading Bonsai-8B 1-bit via MLX...")
+        _llm_model, _llm_tokenizer = load("prism-ml/Bonsai-8B-mlx-1bit")
+        _llm_backend = "mlx"
+
     _llm_history = [{"role": "system", "content": SYSTEM_PROMPT}]
-    print("[llm] Bonsai-8B loaded!")
+    print(f"[llm] Bonsai-8B loaded! (backend={_llm_backend})")
 
 
 def llm_respond(message: str, history: list[dict]) -> str:
-    from mlx_lm import generate
     global _llm_history
 
     _llm_history.append({"role": "user", "content": message})
-    prompt = _llm_tokenizer.apply_chat_template(
-        _llm_history, tokenize=False, add_generation_prompt=True
-    )
-    response = generate(_llm_model, _llm_tokenizer, prompt=prompt, max_tokens=256)
-    clean = re.sub(r"<think>.*?</think>\s*", "", response, flags=re.DOTALL).strip()
+
+    if _llm_backend == "llama_server":
+        result = _llm_model.chat.completions.create(
+            model="bonsai-8b",
+            messages=_llm_history,
+            max_tokens=256,
+        )
+        msg = result.choices[0].message
+        response = msg.content or getattr(msg, "reasoning_content", "") or ""
+    else:
+        from mlx_lm import generate
+
+        prompt = _llm_tokenizer.apply_chat_template(
+            _llm_history, tokenize=False, add_generation_prompt=True
+        )
+        response = generate(_llm_model, _llm_tokenizer, prompt=prompt, max_tokens=256)
+
+    clean = re.sub(r"<think>.*?</think>\s*", "", response, flags=re.DOTALL)
+    clean = re.sub(r"</?think>", "", clean).strip()
     _llm_history.append({"role": "assistant", "content": clean})
     return clean
 
@@ -127,7 +153,8 @@ def build_ui():
     print("[ui] All models loaded!")
 
     with gr.Blocks(title="Midori Chat - Bonsai + Irodori-TTS") as demo:
-        gr.Markdown("# Midori Chat\nBonsai-8B (1-bit MLX) + Irodori-TTS VoiceDesign")
+        backend_label = "llama.cpp 1-bit CUDA" if _llm_backend == "llama_server" else "1-bit MLX"
+        gr.Markdown(f"# Midori Chat\nBonsai-8B (1-bit {backend_label}) + Irodori-TTS VoiceDesign")
 
         with gr.Tab("Chat"):
             chatbot = gr.Chatbot(label="Chat", height=400)
@@ -215,4 +242,5 @@ def build_ui():
 if __name__ == "__main__":
     demo = build_ui()
     demo.queue(default_concurrency_limit=1)
-    demo.launch(server_name="127.0.0.1", server_port=7860)
+    host = os.environ.get("GRADIO_SERVER_NAME", "127.0.0.1")
+    demo.launch(server_name=host, server_port=7860)
