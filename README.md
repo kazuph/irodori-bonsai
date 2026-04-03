@@ -1,32 +1,47 @@
 # irodori-bonsai
 
-Local AI voice chat on Apple Silicon — [Bonsai-8B](https://huggingface.co/prism-ml/Bonsai-8B-mlx-1bit) (1-bit LLM) + [Irodori-TTS VoiceDesign](https://huggingface.co/Aratako/Irodori-TTS-500M-v2-VoiceDesign) (Japanese TTS).
+Local AI voice chat — [Bonsai-8B](https://huggingface.co/prism-ml/Bonsai-8B-mlx-1bit) (1-bit LLM) + [Irodori-TTS VoiceDesign](https://huggingface.co/Aratako/Irodori-TTS-500M-v2-VoiceDesign) (Japanese TTS).
 
-Chat with "Midori", an AI assistant that talks back to you — entirely on your Mac, no cloud APIs needed.
+Chat with "Midori", an AI assistant that talks back to you — entirely local, no cloud APIs needed. Runs on both Apple Silicon (MLX) and NVIDIA GPUs (CUDA via Docker Compose).
 
 ## Features
 
-- **Bonsai-8B** — 1-bit quantized 8B LLM via MLX, ~128 tok/s, 1.4GB memory
-- **Irodori-TTS VoiceDesign** — Flow Matching Japanese TTS via PyTorch MPS, caption-controlled voice style
+- **Bonsai-8B** — 1-bit quantized 8B LLM (1.15 GB model size)
+- **Irodori-TTS VoiceDesign** — Flow Matching Japanese TTS, caption-controlled voice style
 - **Web UI** — Gradio chat interface with auto voice playback
-- **Fully local** — Both models run on Apple Silicon GPU (MLX + MPS)
+- **Cross-platform** — Apple Silicon (MLX + MPS) and NVIDIA GPU (CUDA via Docker Compose)
+- **Fully local** — No cloud APIs needed
 
-## Performance (Mac M-series)
+## Benchmark
 
-| Component | Speed | Memory |
+Measured with 3 runs each, 15-step TTS, short Japanese prompts.
+
+| | Apple M5 (MLX/MPS) | RTX 3090 (CUDA) |
 |---|---|---|
-| LLM (Bonsai-8B 1-bit) | 128 tok/s generation | 1.4 GB |
-| TTS (15 steps) | ~13s for ~7s audio | ~4 GB |
-| Total per turn | ~14s | ~5.4 GB |
+| **LLM response** | 1.02s | 0.27s |
+| **TTS generation** (~4s audio) | 13.59s | 1.45s |
+| **Total per turn** | ~14.6s | ~1.7s |
+| **LLM memory** | ~1.4 GB (unified) | ~1.9 GB (VRAM) |
+| **TTS memory** | ~4 GB (unified) | ~2.9 GB (VRAM) |
 
 ## Requirements
 
-- macOS with Apple Silicon (M1/M2/M3/M4)
+### Mac (Apple Silicon)
+
+- macOS with Apple Silicon (M1/M2/M3/M4/M5)
 - Python 3.12
 - cmake (`brew install cmake`)
 - Metal Toolchain (`xcodebuild -downloadComponent MetalToolchain`)
 
+### Linux (NVIDIA GPU)
+
+- Docker & Docker Compose
+- NVIDIA GPU with CUDA support
+- nvidia-container-toolkit
+
 ## Setup
+
+### Mac (Apple Silicon)
 
 ```bash
 # Install Metal Toolchain (one-time)
@@ -41,6 +56,14 @@ python webui_chat.py
 ```
 
 Then open http://127.0.0.1:7860 in your browser.
+
+### Linux (NVIDIA GPU via Docker Compose)
+
+```bash
+docker compose -f docker/docker-compose.yml up --build
+```
+
+Then open http://localhost:7861 in your browser.
 
 ## Usage
 
@@ -57,6 +80,8 @@ Enter any Japanese text to synthesize speech. Includes sample texts with emoji-b
 
 ## Architecture
 
+### Mac (Apple Silicon)
+
 ```
 User Input → Bonsai-8B (MLX, Apple GPU) → Response Text
                                               ↓
@@ -65,12 +90,28 @@ User Input → Bonsai-8B (MLX, Apple GPU) → Response Text
                                     Audio Playback (browser autoplay)
 ```
 
+### Linux (NVIDIA GPU via Docker Compose)
+
+```
+┌─────────────────────────────────────────────┐
+│ Docker Compose                              │
+│                                             │
+│  ┌─────────────┐    ┌────────────────────┐  │
+│  │ llm service │    │ app service        │  │
+│  │ (llama.cpp  │◄───│ (Gradio + TTS)     │  │
+│  │  1-bit CUDA)│    │ OpenAI API client  │  │
+│  │ :8080       │    │ :7861 → :7860      │  │
+│  └─────────────┘    └────────────────────┘  │
+└─────────────────────────────────────────────┘
+```
+
 ## Credits
 
 - [Bonsai-8B](https://huggingface.co/prism-ml/Bonsai-8B-mlx-1bit) by PrismML — 1-bit quantized LLM
 - [Irodori-TTS](https://huggingface.co/Aratako/Irodori-TTS-500M-v2-VoiceDesign) by Aratako — Flow Matching Japanese TTS
 - [MLX](https://github.com/ml-explore/mlx) by Apple — ML framework for Apple Silicon
-- [PrismML MLX fork](https://github.com/PrismML-Eng/mlx) — 1-bit kernel support
+- [PrismML MLX fork](https://github.com/PrismML-Eng/mlx) — 1-bit MLX kernel support
+- [PrismML llama.cpp fork](https://github.com/PrismML-Eng/llama.cpp) — 1-bit CUDA kernel support
 
 ## License
 
