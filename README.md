@@ -26,6 +26,8 @@ Measured with 3 runs each, 15-step TTS, short Japanese prompts.
 | **LLM memory** | ~1.4 GB (unified) | ~1.9 GB (VRAM) |
 | **TTS memory** | ~4 GB (unified, fp32) | ~2.5 GB (VRAM, bf16) |
 
+> **Note:** TTS memory scales with step count. At 40 steps, TTS VRAM increases to ~6.7 GB on CUDA. Adjust TTS Steps in Settings based on your available memory (15 = fast/light, 40 = higher quality/heavier).
+
 ## Requirements
 
 ### Mac (Apple Silicon)
