@@ -6,6 +6,10 @@ Chat with "Midori", an AI assistant that talks back to you — entirely local, n
 
 ![Midori Chat UI](docs/screenshot.png)
 
+> **Voice sample** — "おはよう！今日もお忙しいの？何かお手伝いできることはありますか？"
+>
+> [docs/sample.wav](docs/sample.wav) (Irodori-TTS VoiceDesign, 15 steps)
+
 ## Features
 
 - **Bonsai-8B** — 1-bit quantized 8B LLM (1.15 GB model size)
