@@ -8,7 +8,7 @@ Chat with "Midori", an AI assistant that talks back to you — entirely local, n
 
 **Voice sample** — "おはよう！今日もお忙しいの？何かお手伝いできることはありますか？" (Irodori-TTS VoiceDesign, 15 steps)
 
-https://github.com/kazuph/irodori-bonsai/raw/main/docs/sample.wav
+https://github.com/kazuph/irodori-bonsai/raw/main/docs/sample.mp4
 
 ## Features
 
