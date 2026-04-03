@@ -21,10 +21,10 @@ Measured with 3 runs each, 15-step TTS, short Japanese prompts.
 | | Apple M5 (MLX/MPS) | RTX 3090 (CUDA) |
 |---|---|---|
 | **LLM response** | 1.02s | 0.27s |
-| **TTS generation** (~4s audio) | 13.59s | 1.45s |
-| **Total per turn** | ~14.6s | ~1.7s |
+| **TTS generation** (~4s audio) | 13.59s | 0.84s |
+| **Total per turn** | ~14.6s | ~1.1s |
 | **LLM memory** | ~1.4 GB (unified) | ~1.9 GB (VRAM) |
-| **TTS memory** | ~4 GB (unified) | ~2.9 GB (VRAM) |
+| **TTS memory** | ~4 GB (unified, fp32) | ~2.5 GB (VRAM, bf16) |
 
 ## Requirements
 
