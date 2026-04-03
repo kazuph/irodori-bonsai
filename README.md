@@ -4,6 +4,8 @@ Local AI voice chat — [Bonsai-8B](https://huggingface.co/prism-ml/Bonsai-8B-ml
 
 Chat with "Midori", an AI assistant that talks back to you — entirely local, no cloud APIs needed. Runs on both Apple Silicon (MLX) and NVIDIA GPUs (CUDA via Docker Compose).
 
+![Midori Chat UI](docs/screenshot.png)
+
 ## Features
 
 - **Bonsai-8B** — 1-bit quantized 8B LLM (1.15 GB model size)
