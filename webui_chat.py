@@ -100,11 +100,12 @@ def load_tts():
         filename="model.safetensors",
     )
     device = default_runtime_device()
+    precision = "bf16" if str(device) == "cuda" else "fp32"
     key = RuntimeKey(
         checkpoint=checkpoint_path,
         model_device=device,
         codec_repo="Aratako/Semantic-DACVAE-Japanese-32dim",
-        model_precision="fp32",
+        model_precision=precision,
         codec_device=device,
         codec_precision="fp32",
         enable_watermark=False,
@@ -112,7 +113,7 @@ def load_tts():
         compile_dynamic=False,
     )
     _tts_runtime, _ = get_cached_runtime(key)
-    print("[tts] Irodori-TTS loaded!")
+    print(f"[tts] Irodori-TTS loaded! (device={device}, precision={precision})")
 
 
 def tts_synthesize(text: str, caption: str, num_steps: int) -> tuple[tuple[int, np.ndarray], str]:

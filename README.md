@@ -4,6 +4,8 @@ Local AI voice chat — [Bonsai-8B](https://huggingface.co/prism-ml/Bonsai-8B-ml
 
 Chat with "Midori", an AI assistant that talks back to you — entirely local, no cloud APIs needed. Runs on both Apple Silicon (MLX) and NVIDIA GPUs (CUDA via Docker Compose).
 
+![Midori Chat UI](docs/screenshot.png)
+
 ## Features
 
 - **Bonsai-8B** — 1-bit quantized 8B LLM (1.15 GB model size)
@@ -19,10 +21,12 @@ Measured with 3 runs each, 15-step TTS, short Japanese prompts.
 | | Apple M5 (MLX/MPS) | RTX 3090 (CUDA) |
 |---|---|---|
 | **LLM response** | 1.02s | 0.27s |
-| **TTS generation** (~4s audio) | 13.59s | 1.45s |
-| **Total per turn** | ~14.6s | ~1.7s |
+| **TTS generation** (~4s audio) | 13.59s | 0.84s |
+| **Total per turn** | ~14.6s | ~1.1s |
 | **LLM memory** | ~1.4 GB (unified) | ~1.9 GB (VRAM) |
-| **TTS memory** | ~4 GB (unified) | ~2.9 GB (VRAM) |
+| **TTS memory** | ~4 GB (unified, fp32) | ~2.5 GB (VRAM, bf16) |
+
+> **Note:** TTS memory scales with step count. At 40 steps, TTS VRAM increases to ~6.7 GB on CUDA. Adjust TTS Steps in Settings based on your available memory (15 = fast/light, 40 = higher quality/heavier).
 
 ## Requirements
 
