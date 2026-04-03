@@ -2,7 +2,7 @@
 
 Local AI voice chat — [Bonsai-8B](https://huggingface.co/prism-ml/Bonsai-8B-mlx-1bit) (1-bit LLM) + [Irodori-TTS VoiceDesign](https://huggingface.co/Aratako/Irodori-TTS-500M-v2-VoiceDesign) (Japanese TTS).
 
-Chat with "Midori", an AI assistant that talks back to you — entirely local, no cloud APIs needed. Runs on both Apple Silicon (MLX) and NVIDIA GPUs (CUDA via Docker).
+Chat with "Midori", an AI assistant that talks back to you — entirely local, no cloud APIs needed. Runs on both Apple Silicon (MLX) and NVIDIA GPUs (CUDA via Docker Compose).
 
 ## Features
 
@@ -21,8 +21,8 @@ Measured with 3 runs each, 15-step TTS, short Japanese prompts.
 | **LLM response** | 1.02s | 0.27s |
 | **TTS generation** (~4s audio) | 13.59s | 1.45s |
 | **Total per turn** | ~14.6s | ~1.7s |
-| **LLM VRAM** | ~1.4 GB | ~1.9 GB |
-| **TTS VRAM** | ~4 GB (shared) | ~2.9 GB |
+| **LLM memory** | ~1.4 GB (unified) | ~1.9 GB (VRAM) |
+| **TTS memory** | ~4 GB (unified) | ~2.9 GB (VRAM) |
 
 ## Requirements
 
@@ -100,7 +100,7 @@ User Input → Bonsai-8B (MLX, Apple GPU) → Response Text
 │  │ llm service │    │ app service        │  │
 │  │ (llama.cpp  │◄───│ (Gradio + TTS)     │  │
 │  │  1-bit CUDA)│    │ OpenAI API client  │  │
-│  │ :8080       │    │ :7860              │  │
+│  │ :8080       │    │ :7861 → :7860      │  │
 │  └─────────────┘    └────────────────────┘  │
 └─────────────────────────────────────────────┘
 ```
